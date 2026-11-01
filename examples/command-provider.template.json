@@ -1,0 +1,11 @@
+{
+  "protocol": 1,
+  "id": "my-local-model",
+  "label": "本地模型",
+  "revision": "v1",
+  "argv": ["/absolute/venv/bin/python", "/absolute/runner.py", "--request", "{request}", "--output", "{output}"],
+  "dependencies": ["/absolute/runner.py"],
+  "resources": {"device": "gpu", "min_available_gib": 8},
+  "output": "result.json",
+  "output_kind": "json"
+}

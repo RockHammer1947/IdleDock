@@ -1,0 +1,45 @@
+name: macOS source checks
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: macos-15
+    timeout-minutes: 15
+    strategy:
+      fail-fast: false
+      matrix:
+        python: ['3.10', '3.12']
+    steps:
+      - uses: actions/checkout@v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v7.1.0
+        with:
+          python-version: ${{ matrix.python }}
+      - name: Install test dependencies
+        run: |
+          python -m pip install -r requirements.txt
+          brew install ffmpeg
+      - name: Check public files and documentation links
+        run: python scripts/check-public.py
+      - name: Fake-runtime tests (no models)
+        run: python -m unittest discover -s tests -v
+      - name: Export checked source snapshot
+        run: python scripts/export-source.py
+      - name: Build native app and verify signature
+        env:
+          DEVELOPER_DIR: /Library/Developer/CommandLineTools
+        run: |
+          export H3_QUEUE_PYTHON="$(command -v python)"
+          ./scripts/build-app.sh
+          codesign --verify --deep --strict 'dist/H3 Queue.app'
+          xcrun swiftc -parse-as-library -module-cache-path .build/module-cache macos/SystemUsage.swift tests/SystemUsageTests.swift -o .build/system-usage-tests
+          .build/system-usage-tests
+      - name: Native localization checks (isolated preferences, no worker)
+        run: ./scripts/test-localization.sh

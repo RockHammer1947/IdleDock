@@ -1,0 +1,8 @@
+{
+  "schema_version": 1,
+  "defaults": {"provider": "tts", "profile": "qwen-custom", "language": "zh", "seed": 42},
+  "jobs": [
+    {"title": "课程 · 第001段", "request": {"text": "第一段配音。"}},
+    {"title": "课程 · 第002段", "request": {"text": "第二段配音。"}}
+  ]
+}

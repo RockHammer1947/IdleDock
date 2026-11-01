@@ -1,0 +1,11 @@
+{
+  "qwen-custom": {
+    "family": "Qwen TTS CustomVoice",
+    "runtime": "mlx-audio",
+    "python": "/absolute/tts-environment/bin/python",
+    "model_path": "/absolute/downloaded-model",
+    "languages": ["zh", "en"],
+    "reference": false,
+    "generation": {}
+  }
+}

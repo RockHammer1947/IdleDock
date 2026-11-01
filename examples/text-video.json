@@ -1,0 +1,9 @@
+{
+  "profile": "native20",
+  "adapter": "profile",
+  "prompt": "A single red fox walks across a snowy pine forest. Locked camera, natural footsteps, no text, no cuts.",
+  "width": 768,
+  "height": 448,
+  "frames": 124,
+  "seed": 42
+}

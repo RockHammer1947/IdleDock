@@ -1,0 +1,9 @@
+{
+  "schema_version": 1,
+  "provider": "tts",
+  "profile": "qwen-custom",
+  "language": "zh",
+  "text": "这是一段用于课程制作的配音文本。",
+  "seed": 42,
+  "options": {"voice": "Vivian"}
+}

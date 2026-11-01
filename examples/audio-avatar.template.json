@@ -1,0 +1,15 @@
+{
+  "profile": "native20",
+  "adapter": "native-audio",
+  "prompt": "The presenter speaks naturally to the camera. Mouth movements follow the supplied speech. Locked camera, preserve identity, no text.",
+  "engine": "/absolute/path/to/validated/native-audio-engine/h3",
+  "portrait": "/absolute/path/to/portrait.png",
+  "audio": "/absolute/path/to/drive.wav",
+  "width": 1280,
+  "height": 736,
+  "frames": 209,
+  "seed": 42,
+  "trim_s": 0,
+  "delivery_frames": 250,
+  "delivery_height": 720
+}
