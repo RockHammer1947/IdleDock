@@ -145,12 +145,13 @@ model/parameter/input changes require a new request, not an old cache hit.
 ./queue status
 ```
 
-Enqueue does not enable a paused queue. If it was already enabled, the new job
-can execute. Run the worker in a second terminal with the same environment:
-
-```sh
-./queue worker
-```
+Enqueue ensures a background worker exists, but does not enable a paused
+queue. If the queue was already enabled, the new job can execute. Set sensor
+environment variables before the first enqueue/init/control command; a running
+worker keeps its existing environment. For a foreground worker, start
+`./queue worker` in a second terminal **before enqueueing**. For systemd, install
+and start the service **before enqueueing** instead. Do not run another worker
+alongside it; the singleton lock makes later workers exit without taking over.
 
 After `queue status` shows fresh temperature telemetry, explicitly authorize work:
 
@@ -185,8 +186,9 @@ systemctl --user enable --now idledock.service
 journalctl --user -u idledock.service -n 50
 ```
 
-The unit must use the same `H3_QUEUE_HOME`, sensor overrides and deployment as
-the CLI. A new queue stays paused. An existing enabled mode can run pending jobs
+Install the service before the first enqueue/init if you want systemd to own
+the worker. It cannot take over an already running detached worker. The unit
+must use the same `H3_QUEUE_HOME`, sensor overrides and deployment as the CLI. A new queue stays paused. An existing enabled mode can run pending jobs
 as soon as the service starts. Do not run a second foreground worker alongside
 it. The singleton lock prevents duplicate workers. `KillMode=process` preserves
 independent attempt supervision across worker restarts; use `queue stop` and

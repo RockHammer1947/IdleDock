@@ -47,7 +47,6 @@ HTTPServer((a.listen,a.port),Handler).serve_forever()
 
 class ComfyTests(unittest.TestCase):
     setUpBase=provider_tests.ProviderTests.setUp
-    tearDown=provider_tests.ProviderTests.tearDown
     add=provider_tests.ProviderTests.add
     row=provider_tests.ProviderTests.row
     out=provider_tests.ProviderTests.out
@@ -71,6 +70,29 @@ class ComfyTests(unittest.TestCase):
         with db() as c:setv(c,'deployment',str(self.install/'deployment'))
         workflow=self.root/'workflow.json';atomic_json(workflow,{'1':{'class_type':'FakeSave','inputs':{'text':'hello'}}})
         self.raw={'provider':'comfyui','assets':{'workflow':str(workflow)},'payload':{}}
+    def tearDown(self):
+        # Failed assertions must still stop/reap only this temporary queue's
+        # fake server before removing its logs and resource-session directory.
+        try:
+            with patch('h3queue.cli.ensure_worker'):control('stop')
+            with db() as c:ids=[r[0] for r in c.execute("select id from jobs where status in ('running','cancel_requested')")]
+            for jid in ids:self.settle(jid,timeout=10)
+        finally:provider_tests.ProviderTests.tearDown(self)
+
+    def test_socket_ownership_fallback_never_accepts_another_process(self):
+        import psutil
+        module_spec=importlib.util.spec_from_file_location('comfy_runner',ROOT/'examples/comfyui/runner.py')
+        runner=importlib.util.module_from_spec(module_spec);module_spec.loader.exec_module(runner)
+        with patch.object(runner.psutil,'Process') as process,patch.object(runner.sys,'platform','darwin'),patch.object(runner.shutil,'which',return_value='/usr/sbin/lsof'),patch.object(runner.subprocess,'run') as run:
+            process.return_value.net_connections.side_effect=psutil.AccessDenied(123)
+            run.return_value=subprocess.CompletedProcess([],0,'p123\nn127.0.0.1:8188\n','')
+            self.assertTrue(runner.owns_listener(123,8188))
+            run.return_value=subprocess.CompletedProcess([],0,'p999\nn127.0.0.1:8188\n','')
+            self.assertFalse(runner.owns_listener(123,8188))
+        with patch.object(runner.psutil,'Process') as process,patch.object(runner.sys,'platform','linux'):
+            process.return_value.net_connections.side_effect=psutil.AccessDenied(123)
+            with self.assertRaisesRegex(RuntimeError,'Cannot verify'):runner.owns_listener(123,8188)
+
     def test_success_collects_hashed_outputs_and_preserves_workflow(self):
         jid=self.add();out=self.start(jid);row=self.settle(jid)
         self.assertEqual(row['status'],'completed',row)

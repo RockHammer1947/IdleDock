@@ -9,6 +9,7 @@ import json
 import os
 from pathlib import Path
 import socket
+import shutil
 import subprocess
 import sys
 import time
@@ -35,6 +36,23 @@ def api(port, path, payload=None):
         data = response.read(MAX_JSON+1)
         if len(data)>MAX_JSON:raise ValueError('ComfyUI response exceeds 16 MiB')
         return json.loads(data)
+
+
+
+def owns_listener(pid, port):
+    try:
+        return any(c.status==psutil.CONN_LISTEN and c.laddr.ip=='127.0.0.1' and c.laddr.port==port
+                   for c in psutil.Process(pid).net_connections(kind='tcp'))
+    except psutil.AccessDenied as exc:
+        # macOS can deny libproc socket enumeration even for our own child.
+        # lsof is another ownership query, never permission to trust any server
+        # merely because its port is reachable.
+        binary=shutil.which('lsof') if sys.platform=='darwin' else None
+        if not binary:raise RuntimeError('Cannot verify owned ComfyUI listening socket; process socket access is required') from exc
+        result=subprocess.run([binary,'-nP','-a','-p',str(pid),'-iTCP:'+str(port),'-sTCP:LISTEN','-Fpn'],
+                              capture_output=True,text=True,timeout=3)
+        lines=result.stdout.splitlines()
+        return result.returncode==0 and 'p'+str(pid) in lines and 'n127.0.0.1:'+str(port) in lines
 
 
 def prepare_workflow(request, input_dir):
@@ -118,8 +136,7 @@ def run(request_path, output_path, config_path):
             try:
                 # Prove our child owns the listening socket. Never connect to
                 # another user's server in the port-allocation race.
-                listening=any(c.status==psutil.CONN_LISTEN and c.laddr.ip=='127.0.0.1' and c.laddr.port==port
-                              for c in psutil.Process(server.pid).net_connections(kind='tcp'))
+                listening=owns_listener(server.pid,port)
                 if listening:
                     stats=api(port, '/system_stats');break
             except (OSError, ValueError, psutil.Error):pass
