@@ -40,19 +40,24 @@ def api(port, path, payload=None):
 
 
 def owns_listener(pid, port):
+    denied = None
     try:
-        return any(c.status==psutil.CONN_LISTEN and c.laddr.ip=='127.0.0.1' and c.laddr.port==port
-                   for c in psutil.Process(pid).net_connections(kind='tcp'))
+        if any(c.status==psutil.CONN_LISTEN and c.laddr.ip=='127.0.0.1' and c.laddr.port==port
+               for c in psutil.Process(pid).net_connections(kind='tcp')):
+            return True
     except psutil.AccessDenied as exc:
-        # macOS can deny libproc socket enumeration even for our own child.
-        # lsof is another ownership query, never permission to trust any server
-        # merely because its port is reachable.
-        binary=shutil.which('lsof') if sys.platform=='darwin' else None
-        if not binary:raise RuntimeError('Cannot verify owned ComfyUI listening socket; process socket access is required') from exc
-        result=subprocess.run([binary,'-nP','-a','-p',str(pid),'-iTCP:'+str(port),'-sTCP:LISTEN','-Fpn'],
-                              capture_output=True,text=True,timeout=3)
-        lines=result.stdout.splitlines()
-        return result.returncode==0 and 'p'+str(pid) in lines and 'n127.0.0.1:'+str(port) in lines
+        denied = exc
+    # On macOS libproc may omit sockets without raising AccessDenied. Query
+    # the same child with lsof on both an empty result and permission denial.
+    if sys.platform!='darwin':
+        if denied:raise RuntimeError('Cannot verify owned ComfyUI listening socket; process socket access is required') from denied
+        return False
+    binary=shutil.which('lsof')
+    if not binary:raise RuntimeError('Cannot verify owned ComfyUI listening socket; lsof is required on macOS')
+    result=subprocess.run([binary,'-nP','-a','-p',str(pid),'-iTCP:'+str(port),'-sTCP:LISTEN','-Fpn'],
+                          capture_output=True,text=True,timeout=3)
+    lines=result.stdout.splitlines()
+    return result.returncode==0 and 'p'+str(pid) in lines and 'n127.0.0.1:'+str(port) in lines
 
 
 def prepare_workflow(request, input_dir):

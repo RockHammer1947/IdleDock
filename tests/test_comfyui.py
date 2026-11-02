@@ -93,6 +93,9 @@ class ComfyTests(unittest.TestCase):
             process.return_value.net_connections.side_effect=psutil.AccessDenied(123)
             run.return_value=subprocess.CompletedProcess([],0,'p123\nn127.0.0.1:8188\n','')
             self.assertTrue(runner.owns_listener(123,8188))
+            process.return_value.net_connections.side_effect=None
+            process.return_value.net_connections.return_value=[]
+            self.assertTrue(runner.owns_listener(123,8188))
             run.return_value=subprocess.CompletedProcess([],0,'p999\nn127.0.0.1:8188\n','')
             self.assertFalse(runner.owns_listener(123,8188))
         with patch.object(runner.psutil,'Process') as process,patch.object(runner.sys,'platform','linux'):
