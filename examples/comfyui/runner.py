@@ -129,7 +129,7 @@ def run(request_path, output_path, config_path):
     # No start_new_session: the queue's PID-birth checked process group owns
     # server and grandchildren, including on SIGKILL/crashed runner recovery.
     try:
-        deadline=time.monotonic()+180
+        deadline=time.monotonic()+180;next_report=0
         while True:
             if server.poll() is not None:raise RuntimeError('Dedicated ComfyUI server exited during startup; see render.log')
             if time.monotonic()>deadline:raise TimeoutError('ComfyUI startup exceeded 180 seconds')
@@ -139,7 +139,13 @@ def run(request_path, output_path, config_path):
                 listening=owns_listener(server.pid,port)
                 if listening:
                     stats=api(port, '/system_stats');break
-            except (OSError, ValueError, psutil.Error):pass
+                if time.monotonic()>=next_report:
+                    print('Waiting for owned ComfyUI listener',server.pid,port,flush=True)
+                    next_report=time.monotonic()+5
+            except (OSError, ValueError, psutil.Error) as exc:
+                if time.monotonic()>=next_report:
+                    print('ComfyUI startup probe:',type(exc).__name__,str(exc),flush=True)
+                    next_report=time.monotonic()+5
             time.sleep(.25)
         result=api(port, '/prompt', {'prompt':workflow,'client_id':request['attempt_id']})
         prompt_id=result.get('prompt_id')

@@ -71,6 +71,12 @@ class ComfyTests(unittest.TestCase):
         workflow=self.root/'workflow.json';atomic_json(workflow,{'1':{'class_type':'FakeSave','inputs':{'text':'hello'}}})
         self.raw={'provider':'comfyui','assets':{'workflow':str(workflow)},'payload':{}}
     def tearDown(self):
+        result=self._outcome.result
+        if any(test is self for test,_ in result.failures+result.errors):
+            for path in self.root.rglob('*.log'):
+                print('FAKE TEST LOG',path.name,path.read_text(errors='replace')[-6000:])
+            for path in self.root.rglob('phase.json'):
+                print('FAKE TEST PHASE',path.read_text())
         # Failed assertions must still stop/reap only this temporary queue's
         # fake server before removing its logs and resource-session directory.
         try:
