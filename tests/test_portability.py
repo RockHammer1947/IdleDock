@@ -57,7 +57,7 @@ class PortabilityTests(unittest.TestCase):
         root = self.launcher();(root/'.state').mkdir()
         (root/'.state/python-path').write_text('/missing/old/python')
         python = self.executable('selected python')
-        result = subprocess.run(['/bin/zsh', '-f', str(root/'queue'), '--help'],
+        result = subprocess.run(['/bin/sh', str(root/'queue'), '--help'],
                                 env={**os.environ, 'H3_QUEUE_PYTHON': str(python)}, capture_output=True, text=True)
         self.assertEqual(result.returncode, 0, result.stderr)
         self.assertIn('chosen:-m', result.stdout)
@@ -66,7 +66,7 @@ class PortabilityTests(unittest.TestCase):
         root = self.launcher();(root/'.state').mkdir()
         (root/'.state/python-path').write_text('/missing/old/python')
         env = {k:v for k,v in os.environ.items() if k != 'H3_QUEUE_PYTHON'}
-        result = subprocess.run(['/bin/zsh', '-f', str(root/'queue'), '--help'], env=env, capture_output=True, text=True)
+        result = subprocess.run(['/bin/sh', str(root/'queue'), '--help'], env=env, capture_output=True, text=True)
         self.assertNotEqual(result.returncode, 0)
         self.assertIn('absolute Python', result.stderr)
 
