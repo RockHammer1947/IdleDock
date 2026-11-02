@@ -39,11 +39,12 @@ def api(port, path, payload=None):
 
 
 
-def owns_listener(pid, port):
+def owns_listener(pid, port, report=False):
     denied = None
     try:
+        connections=psutil.Process(pid).net_connections(kind='tcp')
         if any(c.status==psutil.CONN_LISTEN and c.laddr.ip=='127.0.0.1' and c.laddr.port==port
-               for c in psutil.Process(pid).net_connections(kind='tcp')):
+               for c in connections):
             return True
     except psutil.AccessDenied as exc:
         denied = exc
@@ -57,6 +58,7 @@ def owns_listener(pid, port):
     result=subprocess.run([binary,'-nP','-a','-p',str(pid),'-iTCP:'+str(port),'-sTCP:LISTEN','-Fpn'],
                           capture_output=True,text=True,timeout=3)
     lines=result.stdout.splitlines()
+    if report:print('Owned ComfyUI lsof probe:',result.returncode,repr(result.stdout[-1000:]),repr(result.stderr[-1000:]),flush=True)
     return result.returncode==0 and 'p'+str(pid) in lines and 'n127.0.0.1:'+str(port) in lines
 
 
@@ -141,7 +143,7 @@ def run(request_path, output_path, config_path):
             try:
                 # Prove our child owns the listening socket. Never connect to
                 # another user's server in the port-allocation race.
-                listening=owns_listener(server.pid,port)
+                listening=owns_listener(server.pid,port,report=time.monotonic()>=next_report)
                 if listening:
                     stats=api(port, '/system_stats');break
                 if time.monotonic()>=next_report:

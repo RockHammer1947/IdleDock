@@ -22,6 +22,7 @@ FAKE = r'''
 import argparse,json,os,time
 from pathlib import Path
 from http.server import HTTPServer,BaseHTTPRequestHandler
+from socketserver import TCPServer
 p=argparse.ArgumentParser();p.add_argument('--listen');p.add_argument('--port',type=int);p.add_argument('--input-directory');p.add_argument('--output-directory');p.add_argument('--disable-auto-launch',action='store_true');a=p.parse_args()
 root=Path(a.output_directory);workflow={};submitted=False
 class Handler(BaseHTTPRequestHandler):
@@ -41,7 +42,14 @@ class Handler(BaseHTTPRequestHandler):
     filename='../escape' if text=='escape' else 'result.txt'
     d={'fake-id':{'status':{'status_str':'success','completed':True},'outputs':{'1':{'images':[{'filename':filename,'subfolder':'','type':'output'}]}}}}
   self.send_response(200);self.end_headers();self.wfile.write(json.dumps(d).encode())
-HTTPServer((a.listen,a.port),Handler).serve_forever()
+class LocalHTTPServer(HTTPServer):
+ def server_bind(self):
+  # No reverse-DNS/network dependency in this loopback-only fake fixture.
+  TCPServer.server_bind(self);self.server_name='localhost';self.server_port=self.server_address[1]
+print('FAKE SERVER START',os.getpid(),a.listen,a.port,flush=True)
+server=LocalHTTPServer((a.listen,a.port),Handler)
+print('FAKE SERVER LISTENING',os.getpid(),server.server_address,flush=True)
+server.serve_forever()
 '''
 
 
