@@ -139,7 +139,8 @@ class SafetyTests(unittest.TestCase):
         self.assertEqual(r['total_jobs'],5000);self.assertEqual(len(r['jobs']),200)
         self.assertEqual(r['estimate_seconds'],500000);self.assertLess(elapsed,2)
         (ROOT/'.build').mkdir(exist_ok=True);atomic_json(ROOT/'.build/adversarial-performance.json',{'jobs':5000,'returned_jobs':200,'snapshot_seconds':elapsed,'json_bytes':len(json.dumps(r))})
-    def test_sampler_recovers_from_initial_database_lock(self):
+    @patch('h3queue.telemetry.platform.system',return_value='Darwin')
+    def test_sampler_recovers_from_initial_database_lock(self, _platform):
         from h3queue import telemetry
         actual=telemetry.db;calls=[0]
         def flaky():
@@ -162,7 +163,8 @@ class SafetyTests(unittest.TestCase):
         with patch('h3queue.cli.ensure_worker') as worker,contextlib.redirect_stdout(io.StringIO()):main(['calibrate-energy'])
         worker.assert_not_called()
         with db() as c:self.assertEqual(c.execute('SELECT chip_w FROM energy_metrics').fetchone()[0],100);self.assertEqual(get(c,'mode'),'paused')
-    def test_sampler_handles_nonfinite_power_and_shuts_down_child(self):
+    @patch('h3queue.telemetry.platform.system',return_value='Darwin')
+    def test_sampler_handles_nonfinite_power_and_shuts_down_child(self, _platform):
         binary=self.base/'H3/tools/macmon/macmon';binary.parent.mkdir(parents=True)
         binary.write_text('#!'+sys.executable+'\nimport json,time\nwhile True:\n print(json.dumps({"temp":{"cpu_temp_avg":40,"gpu_temp_avg":40},"all_power":float("nan")}),flush=True);time.sleep(.1)\n');binary.chmod(0o755)
         sampler=Sampler(self.base);sampler.start()

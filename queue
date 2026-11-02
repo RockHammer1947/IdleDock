@@ -1,6 +1,6 @@
-#!/bin/zsh
+#!/bin/sh
 set -eu
-TASK_ROOT="${0:A:h}"
-source "$TASK_ROOT/scripts/python-path.sh"
+TASK_ROOT=$(CDPATH= cd -- "$(dirname -- "$0")" && pwd -P)
+. "$TASK_ROOT/scripts/python-path.sh"
 cd "$TASK_ROOT"
 exec "$QUEUE_PYTHON" -m h3queue.cli "$@"

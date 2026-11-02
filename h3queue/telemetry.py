@@ -1,5 +1,5 @@
 """One low-rate macmon reader; bounded history and honest chip/wall energy labels."""
-import json,math,os,selectors,sqlite3,subprocess,threading,time
+import json,math,os,selectors,sqlite3,subprocess,threading,time,platform
 from pathlib import Path
 from .store import home,db,get,setv,event,atomic_json
 from .safety import DEFAULTS,ThermalLatch,sample_from
@@ -32,6 +32,9 @@ class Sampler:
     def start(self):self.thread.start()
     def close(self):self.stop_event.set();self.thread.join(timeout=6)
     def run(self):
+        if platform.system()=='Linux':
+            from .linux_telemetry import run_sampler
+            return run_sampler(self)
         last_write=0;last_level=None;alert_seq=0
         try:
             while not self.stop_event.is_set():

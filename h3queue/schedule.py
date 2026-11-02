@@ -1,6 +1,6 @@
 from datetime import datetime
 from zoneinfo import ZoneInfo
-import math, re, subprocess, json, time
+import math, re, subprocess, json, time, platform
 from .store import home, atomic_json
 
 _UNSET=object()
@@ -19,6 +19,7 @@ def within(window,now=None):
     return start<=minute<end if start<end else minute>=start or minute<end
 
 def idle_seconds():
+    if platform.system()!='Darwin':return None
     try:
         out=subprocess.check_output(['/usr/sbin/ioreg','-r','-c','IOHIDSystem'],text=True,timeout=3)
         match=re.search(r'"HIDIdleTime"\s*=\s*(\d+)',out)

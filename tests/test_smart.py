@@ -19,7 +19,8 @@ class SmartTests(unittest.TestCase):
             with patch('h3queue.schedule.within',return_value=False) as window:
                 self.assertEqual(allowed('smart',{},False,10,idle=idle)[0],expected);window.assert_not_called()
         self.assertFalse(allowed('paused',{},False,10,idle=3600)[0])
-    def test_missing_invalid_or_unreadable_idle_fails_closed(self):
+    @patch('h3queue.schedule.platform.system',return_value='Darwin')
+    def test_missing_invalid_or_unreadable_idle_fails_closed(self, _platform):
         for idle in [None,-1,float('nan'),float('inf'),True]:
             self.assertFalse(smart_state(10,idle)['ready']);self.assertIsNone(smart_state(10,idle)['remaining_seconds'])
         with patch('h3queue.schedule.subprocess.check_output',return_value='HID data missing'):
@@ -40,7 +41,8 @@ class SmartTests(unittest.TestCase):
         for value in ['0','241']:
             with self.assertRaises(ValueError):main(['smart-config','--idle-minutes',value])
         with db() as c:self.assertEqual(get(c,'smart_idle_minutes'),15)
-    def test_explicit_mode_switch_and_stop_override_smart(self):
+    @patch('h3queue.schedule.platform.system',return_value='Darwin')
+    def test_explicit_mode_switch_and_stop_override_smart(self, _platform):
         with patch('h3queue.cli.ensure_worker'):
             control('smart');self.assertEqual(json.loads((home()/'runtime.json').read_text())['mode'],'smart')
             control('stop')

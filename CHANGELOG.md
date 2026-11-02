@@ -1,5 +1,13 @@
 # Changelog
 
+## 2026-11-02 — Experimental Linux worker
+
+- Portable POSIX CLI launcher; manual and headless scheduled execution on Linux.
+- Fail-closed sysfs/NVIDIA temperature telemetry with explicit sensor-path diagnostics.
+- Registered ComfyUI adapter with a dedicated owned server, isolated attempts and hashed saved artifacts.
+- Linux x86-64/ARM64 CI, systemd example and SSH/setup documentation.
+- No DGX Spark hardware or real CUDA/model validation claimed.
+
 ## Unreleased
 
 - Named the project IdleDock; retained legacy app filename, data/preferences, package names, service identifiers and CLI settings for compatibility.

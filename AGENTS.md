@@ -1,6 +1,6 @@
 # IdleDock — agent instructions
 
-This is a macOS local compute queue: Python + SQLite + psutil, native SwiftUI/AppKit UI. It schedules H3, batch TTS, and registered command providers. No web service, npm, Docker, or cloud account is needed. Model deployments are external.
+This is a macOS local compute queue with an experimental Linux headless worker: Python + SQLite + psutil, native SwiftUI/AppKit UI. It schedules H3, batch TTS, and registered command providers. No web service, npm, Docker, or cloud account is needed. Model deployments are external.
 
 Read [docs/AGENT_GUIDE.md](docs/AGENT_GUIDE.md) for operational recipes. If `AGENTS.local.md` exists, read it explicitly for this machine's deployment paths and current user restrictions; it is ignored by Git, not automatically loaded by every agent. Current user instructions take precedence over historical local notes.
 
@@ -62,3 +62,7 @@ If available, prefer codebase-memory-mcp `search_graph`, `trace_path`, `get_code
 - IdleDock is the public/display name. Keep legacy package names, app filename, bundle/service identifiers, data paths and CLI environment variables compatible; branding alone must not move a queue or reset preferences.
 - Source preparation uses `python3 scripts/check-public.py` and `python3 scripts/export-source.py` into ignored `.build/`. Review the manifest; do not archive the whole checkout or treat a local snapshot as a published/tagged release. Read [release instructions](docs/RELEASING.md) before publishing.
 - Keep machine paths, private task titles, media, logs, databases, model files, and credentials out of public docs and commits. Use `.local/` and `AGENTS.local.md` for private notes.
+
+## Experimental Linux / ComfyUI
+
+Read [docs/LINUX.md](docs/LINUX.md). No DGX Spark or real CUDA validation is claimed. Use actual sysfs/NVIDIA temperature readings; missing telemetry still blocks. Linux supports manual or scheduled `--no-idle`, not desktop smart mode, native UI, or launchd. The ComfyUI example owns a dedicated local server per attempt inside the GPU session and guarded process group; do not attach it to a shared server or replace owned cleanup with global API cancellation. Separate state/deployment per host; never share SQLite via a network filesystem. Mac SSH mirroring is CLI-only. Keep tests model-free.

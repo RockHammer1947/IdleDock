@@ -1,4 +1,4 @@
-import argparse,json,os,subprocess,sys,time,plistlib
+import argparse,json,os,subprocess,sys,time,plistlib,platform
 from pathlib import Path
 from .store import db,get,setv,event,home,ROOT,digest,atomic_json
 from .jobs import enqueue,import_avatar
@@ -16,7 +16,9 @@ def ensure_worker():
 def control(action):
     with db() as c:
         c.execute('BEGIN IMMEDIATE')
+        if action=='smart' and platform.system()!='Darwin':raise ValueError('Smart desktop idle detection is macOS-only; use start or schedule --no-idle on Linux')
         if action in ('start','auto','smart'):
+            if action=='auto' and get(c,'require_idle') and platform.system()!='Darwin':raise ValueError('Linux headless schedules require schedule --no-idle')
             problem=blocked(get(c,'safety'),sample_from(home()/'telemetry.json'),home())
             if problem:raise ValueError(problem)
             setv(c,'safety_latch',None)
@@ -190,7 +192,9 @@ def main(argv=None):
                 path=r['output']
                 if not path and r['attempt_id']:path=c.execute('SELECT directory FROM attempts WHERE id=?',(r['attempt_id'],)).fetchone()[0]
                 if not path:raise ValueError('尚无输出目录')
-                subprocess.run(['/usr/bin/open','-R',path],check=True)
+                if platform.system()=='Darwin':subprocess.run(['/usr/bin/open','-R',path],check=True)
+                else:
+                    result={'id':args.id,'path':path};print(json.dumps(result));return
             elif cmd=='prioritize':c.execute('UPDATE jobs SET priority=priority+1,updated=? WHERE id=?',(time.time(),args.id))
             elif cmd=='retry':
                 from .recovery import prepare_retry
@@ -202,6 +206,7 @@ def main(argv=None):
             event(c,cmd,args.id)
         result={'id':args.id,'action':cmd}
     elif cmd=='launch-agent':
+        if platform.system()!='Darwin':raise ValueError('launch-agent is macOS-only; use queue worker or the documented systemd service on Linux')
         label='local.queue-mac-h3.worker';path=Path.home()/'Library/LaunchAgents'/f'{label}.plist';domain=f'gui/{os.getuid()}'
         if args.action=='install':
             path.parent.mkdir(exist_ok=True,parents=True)
@@ -215,13 +220,18 @@ def main(argv=None):
     elif cmd=='doctor':
         from .providers import catalog
         from .system_tools import find_tool
-        import importlib.util,platform
+        import importlib.util
         with db() as c:base=Path(get(c,'deployment'))
         result={'python':sys.executable,'sqlite':str(home()/'queue.sqlite3'),'deployment':str(base),'providers':catalog(base),
                 'platform':{'system':platform.system(),'machine':platform.machine(),'python_version':platform.python_version()},
                 'psutil':importlib.util.find_spec('psutil') is not None,
+                'telemetry':sample_from(home()/'telemetry.json'),
+                'capabilities':{'native_ui':platform.system()=='Darwin','desktop_idle':platform.system()=='Darwin','headless_worker':True},
                 'tools':{name:find_tool(name,base) for name in ('ffmpeg','ffprobe','macmon')},
                 'dependencies':{str(x):x.exists() for x in [base/'agent_session.py',base/'H3/generate_fast.py',base/'H3/resource_monitor.py',base/'H3/minimax-h3-mlx/.venv/bin/python']}}
+    if cmd=='doctor' and platform.system()=='Linux':
+        from .linux_telemetry import read_sample
+        result['linux_sensor_probe']=read_sample()
     print(json.dumps(result,ensure_ascii=False))
 
 if __name__=='__main__':

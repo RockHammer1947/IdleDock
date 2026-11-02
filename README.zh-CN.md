@@ -25,6 +25,10 @@
 
 队列本身使用 Python 标准库及 `psutil`，模型在各自环境中运行。
 
+## 实验性 Linux worker
+
+新增 Linux 无界面 CLI/worker 与独立 ComfyUI 实例适配器，可在每台 Spark 单独部署，Mac 通过 SSH 查看和控制。支持手动和不检测桌面空闲的时段模式，保留资源保护。不含远程原生界面、Linux 桌面空闲检测或多机负载均衡。**尚无 DGX Spark 真机或真实 CUDA 工作流验证。** 详见 [Linux 安装、传感器要求和反馈指南](docs/LINUX.md)。
+
 ## 开源范围
 
 | 接入方式 | 仓库包含 | 使用者需要准备 |

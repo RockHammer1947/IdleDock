@@ -36,6 +36,10 @@ H3 的中断片段需要重做。TTS 按自然段入队，失败只重做对应�
 - `waiting_resource / preparing / running / restoring` 明确区分等锁、准备、执行和恢复。等锁时间不消耗生成耗时估计。
 - 这是协作协议，不能约束不经过队列/共享包装器的外部推理进程。其他项目应提交队列请求；不要直接调用底层 TTS benchmark worker、模型 API 或底层引擎来绕过锁。不要在已持锁的命令内部再调用队列并等待它完成。
 
+## Linux 与 ComfyUI（实验性）
+
+Linux CLI/worker 与受保护的本地 ComfyUI 命令 provider 见 [Linux 指南](LINUX.md)。每次 attempt 启动专用回环服务，属于同一受管理进程组，不接管已有共享服务。暂无 DGX Spark 真机验证。Linux 使用真实 sysfs/NVIDIA 温度，缺失或过期仍阻止执行；不支持桌面智能空闲。
+
 ## 使用内置 TTS
 
 先执行 `./queue providers` 查看配置与本地文件是否存在。`files_present` 只表示配置路径存在，不代表模型已通过真实合成或质量验收。

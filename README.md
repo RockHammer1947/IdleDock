@@ -2,7 +2,7 @@
 
 **Local AI, in order.**
 
-[简体中文](README.zh-CN.md) · [Install](docs/INSTALL.md) · [Agent guide](docs/AGENT_GUIDE.md) · [Provider API](docs/PROVIDERS.md)
+[简体中文](README.zh-CN.md) · [Install](docs/INSTALL.md) · [Agent guide](docs/AGENT_GUIDE.md) · [Provider API](docs/PROVIDERS.md) · [Linux / DGX Spark (experimental)](docs/LINUX.md)
 
 A local, serial job queue for resource-intensive work on Apple Silicon Macs. Queue H3 video, batch speech synthesis, or your own local program; control execution from a native menu bar widget or a JSON CLI.
 
@@ -26,6 +26,10 @@ Captured from the implemented native app in read-only preview mode. Task names, 
 - Provides a floating SwiftUI/AppKit widget with video preview, audio playback, and system metrics. Supports 11 UI languages: English, Simplified/Traditional Chinese, Japanese, Korean, Spanish, French, German, Russian, Brazilian Portuguese and Italian, with automatic system-language selection and instant switching.
 
 No web server, cloud account, Redis, Docker, or Node.js is required. The queue uses Python's standard library plus `psutil`; models run in their own environments.
+
+## Experimental Linux worker
+
+A headless Linux CLI/worker and owned local ComfyUI adapter are available for testing. Run one queue per Spark; use SSH from the Mac to view/control it. Manual and scheduled (`--no-idle`) modes retain resource protection. Linux desktop idle detection, remote SwiftUI and multi-host balancing are not implemented. **No DGX Spark hardware or real CUDA workflow validation yet.** [Setup, sensor requirements and contribution guide](docs/LINUX.md).
 
 ## Current scope
 

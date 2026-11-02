@@ -85,3 +85,7 @@ Registration runs trusted code later. Requests are JSON data; never construct sh
 A useful first session should identify: one serial queue; external model installations; mode preservation; enqueue versus start; pause versus stop; shared lock and restoration; mandatory fresh telemetry; isolated fake tests; and technical versus human acceptance. If an agent proposes raw SQLite edits, direct model calls, or disabling guards, correct its understanding before it acts.
 
 The instructions have been checked against the linked official documentation. That is not a claim that live sessions of every agent client have been exercised on every version.
+
+## Linux / DGX Spark entry point
+
+For headless Linux work, first read [LINUX.md](LINUX.md). Inspect status/doctor/providers and Linux sensor probe before execution. Never use macOS setup/launch-agent on Linux, fabricate sensor readings, or disable guards. The ComfyUI adapter uses a dedicated owned child server, not an existing LAN endpoint. A new queue stays paused; service installation is not permission to start inference. Real Spark feedback remains needed.

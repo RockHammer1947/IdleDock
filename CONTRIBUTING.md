@@ -1,6 +1,6 @@
 # Contributing
 
-Read [AGENTS.md](AGENTS.md) before changing scheduling or execution. Use a local checkout on an Apple Silicon Mac; the supported UI target is macOS 14+. Graph/MCP tools are optional. No account, GPU model, or cloud service is required to develop the queue.
+Read [AGENTS.md](AGENTS.md) before changing scheduling or execution. Use an Apple Silicon Mac for native UI work (macOS 14+), or Linux for the experimental headless worker. See [Linux setup](docs/LINUX.md). Graph/MCP tools are optional. No account, GPU model, or cloud service is required to develop the queue.
 
 ## Setup and checks
 
@@ -25,7 +25,7 @@ DEVELOPER_DIR=/Library/Developer/CommandLineTools xcrun swiftc -parse-as-library
 codesign --verify --deep --strict 'dist/H3 Queue.app'
 ```
 
-The GitHub workflow performs these checks on macOS with fake runtimes. It does not execute a real model, access a deployment, publish releases, or upload user state. A local build uses ad-hoc signing, not notarization.
+The GitHub workflow performs native checks on macOS and Python fake-runtime checks on Linux x86-64/ARM64. It does not execute a real model, access a deployment, publish releases, or upload user state. A local build uses ad-hoc signing, not notarization.
 
 See [the recorded source-preparation validation](docs/VALIDATION.md) for the checks actually run and their limits.
 
@@ -41,7 +41,7 @@ All UI text belongs in every `macos/Resources/*.lproj/Localizable.strings` catal
 
 ## Pull requests and issues
 
-Describe the user-visible problem, resulting behavior, relevant validation, and remaining limitations. Include a small sanitized reproduction, macOS/architecture, Python version, provider/runtime identity, and redacted error information. Never attach a full `.state`, user media, model weights, or raw private logs. See [SECURITY.md](SECURITY.md) for sensitive reports.
+Describe the user-visible problem, resulting behavior, relevant validation, and remaining limitations. Include a small sanitized reproduction, OS/architecture, Python version, provider/runtime identity, and redacted error information. Never attach a full `.state`, user media, model weights, or raw private logs. See [SECURITY.md](SECURITY.md) for sensitive reports.
 
 Before committing, run `scripts/check-public.py` and inspect the diff yourself. Its checks cover local links, example JSON, selected private path/key patterns, and accidental binary/state files; it is not a complete secret scanner. By contributing code/docs, you agree to make your contribution available under this project's [MIT license](LICENSE). External models/dependencies keep their own licenses.
 

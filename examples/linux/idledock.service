@@ -1,0 +1,19 @@
+# User service; assumes the checkout is ~/IdleDock. Review paths before install.
+[Unit]
+Description=IdleDock headless local compute queue
+After=network.target
+
+[Service]
+Type=simple
+WorkingDirectory=%h/IdleDock
+ExecStart=%h/IdleDock/.venv/bin/python -m h3queue.cli worker
+Environment=H3_QUEUE_HOME=%h/.local/share/idledock
+Environment=PATH=/usr/local/bin:/usr/bin:/bin
+Restart=on-failure
+RestartSec=5
+# Supervisors intentionally survive worker restarts; queue stop cancels work.
+KillMode=process
+TimeoutStopSec=15
+
+[Install]
+WantedBy=default.target

@@ -1,3 +1,5 @@
+> Linux / DGX Spark: use the experimental [headless worker guide](LINUX.md). The native setup below remains macOS-only.
+
 # Install and first run
 
 [中文概览](../README.zh-CN.md) · [Deployment contract](DEPLOYMENT.md) · [Usage](USAGE.md)
