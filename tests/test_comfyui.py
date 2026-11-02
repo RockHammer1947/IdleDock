@@ -62,6 +62,11 @@ class ComfyTests(unittest.TestCase):
         self.install=self.root/'prepared'
         subprocess.run([sys.executable,str(ROOT/'scripts/prepare-comfyui.py'),str(self.install),
                         '--comfy-root',str(self.comfy),'--comfy-python',sys.executable],check=True,capture_output=True)
+        # Fake server uses negligible memory; retain the normal 4 GiB reserve
+        # in shipped manifests, but use the existing 1 GiB test-fixture policy.
+        manifest=json.loads((self.install/'provider.json').read_text())
+        manifest['resources']['min_available_gib']=1
+        atomic_json(self.install/'provider.json',manifest)
         register(self.install/'provider.json')
         with db() as c:setv(c,'deployment',str(self.install/'deployment'))
         workflow=self.root/'workflow.json';atomic_json(workflow,{'1':{'class_type':'FakeSave','inputs':{'text':'hello'}}})
@@ -96,6 +101,8 @@ class ComfyTests(unittest.TestCase):
             jid=self.add({**self.raw,'payload':{'inputs':{'1':{'text':text}}}})
             self.start(jid);row=self.settle(jid)
             self.assertEqual(row['status'],'failed',row)
+            log=(self.out(jid)/'render.log').read_text()
+            self.assertIn('workflow failed' if text=='fail' else 'Unsafe ComfyUI artifact',log)
             with db() as c:self.assertEqual(c.execute('select count(*) from cache where fingerprint=?',(row['fingerprint'],)).fetchone()[0],0)
     def test_workflow_and_installation_are_pinned(self):
         s=normalize(self.raw,self.install/'deployment');validate_spec(s)
